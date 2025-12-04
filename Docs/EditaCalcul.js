@@ -16,14 +16,22 @@ const all_ids=[...text.matchAll(/\[\[.*?\]\]/g)].map(m=>m[0]);
 const Act_Fet_NoFet=all_ids.filter(id=>id.includes('_'));
 const Activitats_0_10=all_ids.filter(id=>id.includes('-'));
 const Act_Fet_NoFet_RAn=Act_Fet_NoFet.map(code=>{const digitsMatch=code.match(/\[\[(.*?)_/);if(!digitsMatch)return null;const digits=digitsMatch[1].split('');return digits.map(d=>d+'*('+code+'-1)');}).filter(row=>row);
-const Activitats_0_10_RAn=Activitats_0_10.map(code=>{const digitsMatch=code.match(/\[\[(.*?)-/);if(!digitsMatch)return null;const digits=digitsMatch[1].split('');return digits.map(d=>`${d}*${code}`);}).filter(row=>row);
+const Activitats_0_10_RAn=Activitats_0_10.map(code=>{const digitsMatch=code.match(/\[\[(.*?)-/);if(!digitsMatch)return null;const digits=digitsMatch[1].split('');return digits.map(d=>d+'*'+code);}).filter(row=>row);
 window.Act_Fet_NoFet=Act_Fet_NoFet;window.Activitats_0_10=Activitats_0_10;window.Act_Fet_NoFet_RAn=Act_Fet_NoFet_RAn;window.Activitats_0_10_RAn=Activitats_0_10_RAn;
-const formulas=[];if(Act_Fet_NoFet_RAn.length>0){const numCols=Act_Fet_NoFet_RAn[0].length;for(let i=0;i<numCols;i++){const colValues=Act_Fet_NoFet_RAn.map(row=>row[i]).filter(v=>v&&!v.startsWith('0*'));if(colValues.length>0){formulas.push(`RA${i+1}: =average(${colValues.join(';')})/2*10`);}}}
+const formulas=[];
+const numCols=Math.max(Act_Fet_NoFet_RAn.length>0?Act_Fet_NoFet_RAn[0].length:0,Activitats_0_10_RAn.length>0?Activitats_0_10_RAn[0].length:0);
+for(let i=0;i<numCols;i++){
+const colValues_Fet=Act_Fet_NoFet_RAn.map(row=>row[i]).filter(v=>v&&!v.startsWith('0*'));
+const colValues_010=Activitats_0_10_RAn.map(row=>row[i]).filter(v=>v&&!v.startsWith('0*'));
+const parts=[];
+if(colValues_Fet.length>0){parts.push('average('+colValues_Fet.join(';')+')/2*10');}
+if(colValues_010.length>0){parts.push('average('+colValues_010.join(';')+')');}
+if(parts.length>0){formulas.push('RA'+(i+1)+': =average('+parts.join(';')+')');}}
 window.raFormulasText=formulas.join('\n');
 const oldButtons=document.getElementById('raButtonsContainer');if(oldButtons)oldButtons.remove();
 const raContainer=document.createElement('div');raContainer.id='raButtonsContainer';raContainer.style.marginTop='8px';overlay.appendChild(raContainer);
-formulas.forEach(formulaText=>{const btn=document.createElement('button');btn.textContent=`Copy ${formulaText.split(':')[0]}`;btn.style.marginRight='5px';btn.style.marginTop='3px';btn.style.padding='3px 8px';btn.style.border='1px solid #fff';btn.style.borderRadius='3px';btn.style.background='rgba(255,255,255,0.1)';btn.style.color='white';btn.style.cursor='pointer';btn.title=formulaText;
-btn.addEventListener('click',()=>{navigator.clipboard.writeText(formulaText.split(': ')[1]).then(()=>alert(`${formulaText.split(':')[0]} copied!`)).catch(err=>alert('Copy failed: '+err));});
+formulas.forEach(formulaText=>{const btn=document.createElement('button');btn.textContent='Copy '+formulaText.split(':')[0];btn.style.marginRight='5px';btn.style.marginTop='3px';btn.style.padding='3px 8px';btn.style.border='1px solid #fff';btn.style.borderRadius='3px';btn.style.background='rgba(255,255,255,0.1)';btn.style.color='white';btn.style.cursor='pointer';btn.title=formulaText;
+btn.addEventListener('click',()=>{navigator.clipboard.writeText(formulaText.split(': ')[1]).then(()=>alert(formulaText.split(':')[0]+' copied!')).catch(err=>alert('Copy failed: '+err));});
 raContainer.appendChild(btn);});
 output.textContent='Act_Fet_NoFet_RAn:\n'+JSON.stringify(Act_Fet_NoFet_RAn,null,2)+'\n\nActivitats_0_10_RAn:\n'+JSON.stringify(Activitats_0_10_RAn,null,2)+'\n\nRA Formulas per column:\n'+formulas.join('\n');
 if(formulas.length>0){const lines=formulas.map(s=>s.split(': ')[1]);const blob=new Blob([lines.join('\n')],{type:'text/plain'});const url=URL.createObjectURL(blob);const link=document.createElement('a');link.href=url;link.download='RA_formules.txt';document.body.appendChild(link);link.click();document.body.removeChild(link);URL.revokeObjectURL(url);}}
