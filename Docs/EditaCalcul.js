@@ -47,7 +47,7 @@
         t.style.display = minimized ? 'none' : '';
         o.style.display = minimized ? 'none' : '';
         const c = document.getElementById('raButtonsContainer');
-        if(c) c.style.display = minimized ? 'none' : '';f
+        if(c) c.style.display = minimized ? 'none' : '';
         e.style.height = minimized ? '40px' : '580px';
         minBtn.textContent = minimized ? '+' : '–';
     };
