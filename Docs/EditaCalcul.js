@@ -106,28 +106,40 @@ document.addEventListener('keydown', a => {
     if (a.key === 'Escape') e.remove();
 });
 
-/* --- RA processing with ZERO-WEIGHT FILTERING --- */
+/* --- RA processing with PROPER COLUMN TRACKING --- */
 function r(){try{
     const a=t.value.split('\n').filter(s=>!s.includes('Total de la categ')).join('\n'),
     d=[...a.matchAll(/\[\[.*?\]\]/g)].map(s=>s[0]),
     c=d.filter(s=>s.includes('_')),
-    p=d.filter(s=>s.includes('-')),
-    m=c.map(s=>{const h=s.match(/\[\[(.*?)_/);if(!h)return null;const parts=h[1].split('').map(g=>`${g}*(${s}-1)`);return parts.filter(v=>!v.startsWith('0*'))}).filter(s=>s&&s.length>0),
-    u=p.map(s=>{const h=s.match(/\[\[(.*?)-/);if(!h)return null;const parts=h[1].split('').map(g=>`${g}*(${s})`);return parts.filter(v=>!v.startsWith('0*'))}).filter(s=>s&&s.length>0);
+    p=d.filter(s=>s.includes('-'));
+
+    // Build with column index tracking: [{col: 0, formula: "3*(...)"}, ...]
+    const m=c.map(s=>{
+        const h=s.match(/\[\[(.*?)_/);
+        if(!h)return null;
+        return h[1].split('').map((g,idx)=>({col:idx,formula:`${g}*(${s}-1)`,weight:g})).filter(v=>v.weight!=='0');
+    }).filter(s=>s&&s.length>0);
+
+    const u=p.map(s=>{
+        const h=s.match(/\[\[(.*?)-/);
+        if(!h)return null;
+        return h[1].split('').map((g,idx)=>({col:idx,formula:`${g}*(${s})`,weight:g})).filter(v=>v.weight!=='0');
+    }).filter(s=>s&&s.length>0);
 
     window.Act_Fet_NoFet=c;
     window.Activitats_0_10=p;
     window.Act_Fet_NoFet_RAn=m;
     window.Activitats_0_10_RAn=u;
 
+    // Find max column number
+    const maxCol=Math.max(...m.flatMap(arr=>arr.map(item=>item.col)));
+    
     const f=[];
-    if(m.length>0){
-        const maxRAs=Math.max(...m.map(arr=>arr.length));
-        for(let g=0;g<maxRAs;g++){
-            const w=m.map(v=>v[g]).filter(v=>v);
-            if (w.length>0) f.push(`RA${g+1}: =average(${w.join(';')})/2*10`);
-        }
+    for(let g=0;g<=maxCol;g++){
+        const w=m.flatMap(activityArray=>activityArray.filter(item=>item.col===g).map(item=>item.formula));
+        if(w.length>0) f.push(`RA${g+1}: =average(${w.join(';')})/2*10`);
     }
+    
     window.raFormulasText=f.join('\n');
 
     const old = document.getElementById('raButtonsContainer');
@@ -155,8 +167,8 @@ function r(){try{
         R.appendChild(h);
     });
 
-    o.textContent='Act_Fet_NoFet_RAn (zero-weights removed):\n'+JSON.stringify(m,null,2)
-        +'\n\nActivitats_0_10_RAn (zero-weights removed):\n'+JSON.stringify(u,null,2)
+    o.textContent='Act_Fet_NoFet_RAn (zero-weights removed, column-tracked):\n'+JSON.stringify(m,null,2)
+        +'\n\nActivitats_0_10_RAn (zero-weights removed, column-tracked):\n'+JSON.stringify(u,null,2)
         +'\n\nRA Formulas per column:\n'+f.join('\n');
 
     /* --- Auto-download --- */
