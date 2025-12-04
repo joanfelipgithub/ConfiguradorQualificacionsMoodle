@@ -15,7 +15,7 @@ const lines=textarea.value.split('\n');const filteredLines=lines.filter(line=>!l
 const all_ids=[...text.matchAll(/\[\[.*?\]\]/g)].map(m=>m[0]);
 const Act_Fet_NoFet=all_ids.filter(id=>id.includes('_'));
 const Activitats_0_10=all_ids.filter(id=>id.includes('-'));
-const Act_Fet_NoFet_RAn=Act_Fet_NoFet.map(code=>{const digitsMatch=code.match(/\[\[(.*?)_/);if(!digitsMatch)return null;const digits=digitsMatch[1].split('');return digits.map(d=>`${d}*${code}-1`);}).filter(row=>row);
+const Act_Fet_NoFet_RAn=Act_Fet_NoFet.map(code=>{const digitsMatch=code.match(/\[\[(.*?)_/);if(!digitsMatch)return null;const digits=digitsMatch[1].split('');return digits.map(d=>`${d}*(${code}-1)`);}).filter(row=>row);
 const Activitats_0_10_RAn=Activitats_0_10.map(code=>{const digitsMatch=code.match(/\[\[(.*?)-/);if(!digitsMatch)return null;const digits=digitsMatch[1].split('');return digits.map(d=>`${d}*${code}`);}).filter(row=>row);
 window.Act_Fet_NoFet=Act_Fet_NoFet;window.Activitats_0_10=Activitats_0_10;window.Act_Fet_NoFet_RAn=Act_Fet_NoFet_RAn;window.Activitats_0_10_RAn=Activitats_0_10_RAn;
 const formulas=[];if(Act_Fet_NoFet_RAn.length>0){const numCols=Act_Fet_NoFet_RAn[0].length;for(let i=0;i<numCols;i++){const colValues=Act_Fet_NoFet_RAn.map(row=>row[i]).filter(v=>v&&!v.startsWith('0*'));if(colValues.length>0){formulas.push(`RA${i+1}: =average(${colValues.join(';')})/2*10`);}}}
