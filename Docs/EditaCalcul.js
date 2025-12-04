@@ -1,5 +1,4 @@
 (function(){
-'use strict';
 if(document.getElementById('myOverlayTextBox'))return;
 const overlay=document.createElement('div');overlay.id='myOverlayTextBox';
 overlay.style.position='fixed';overlay.style.top='50px';overlay.style.left='50px';
