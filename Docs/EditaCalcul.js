@@ -1,5 +1,4 @@
 javascript:(function(){
-'use strict';
 if(document.getElementById('myOverlayTextBox'))return;
 const overlay=document.createElement('div');overlay.id='myOverlayTextBox';overlay.style.position='fixed';overlay.style.top='50px';overlay.style.left='50px';overlay.style.width='780px';overlay.style.height='580px';overlay.style.backgroundColor='rgba(0,0,0,0.95)';overlay.style.zIndex=10000;overlay.style.border='2px solid #fff';overlay.style.borderRadius='8px';overlay.style.padding='10px';overlay.style.boxShadow='0 0 15px #000';overlay.style.resize='both';overlay.style.overflow='auto';overlay.style.color='white';overlay.style.fontFamily='monospace';
 const textarea=document.createElement('textarea');textarea.style.width='100%';textarea.style.height='35%';textarea.style.background='transparent';textarea.style.color='white';textarea.style.border='1px solid #fff';textarea.style.outline='none';textarea.style.fontSize='14px';textarea.placeholder='Paste your lines here...';
