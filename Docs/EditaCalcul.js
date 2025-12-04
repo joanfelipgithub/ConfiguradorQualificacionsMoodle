@@ -1,219 +1,179 @@
-// ==UserScript==
-// @name         Moodle RA Overlay
-// @description  Overlay for RA formulas with automatic download
-// @version      1.4
-// ==/UserScript==
+javascript:(function(){
+if (document.getElementById('myOverlayTextBox')) return;
 
-(function() {
-    'use strict';
-    if(document.getElementById('myOverlayTextBox')) return;
+const e = document.createElement('div');
+e.id = 'myOverlayTextBox';
+e.style.position = 'fixed';
+e.style.top = '50px';
+e.style.left = '50px';
+e.style.width = '780px';
+e.style.height = '580px';
+e.style.backgroundColor = 'rgba(0,0,0,0.95)';
+e.style.zIndex = 10000;
+e.style.border = '2px solid #fff';
+e.style.borderRadius = '8px';
+e.style.padding = '10px';
+e.style.boxShadow = '0 0 15px #000';
+e.style.resize = 'both';
+e.style.overflow = 'auto';
+e.style.color = 'white';
+e.style.fontFamily = 'monospace';
+e.style.boxSizing = 'border-box';
 
-    // Overlay container
-    const e = document.createElement('div');
-    e.id = 'myOverlayTextBox';
-    e.style.position = 'fixed';
-    e.style.top = '50px';
-    e.style.left = '50px';
-    e.style.width = '780px';
-    e.style.height = '580px';
-    e.style.backgroundColor = 'rgba(0,0,0,0.95)';
-    e.style.zIndex = 10000;
-    e.style.border = '2px solid #fff';
-    e.style.borderRadius = '8px';
-    e.style.padding = '10px';
-    e.style.boxShadow = '0 0 15px #000';
-    e.style.resize = 'both';
-    e.style.overflow = 'auto';
-    e.style.color = 'white';
-    e.style.fontFamily = 'monospace';
-    e.style.boxSizing = 'border-box';
+/* --- Minimize Button --- */
+const minBtn = document.createElement('button');
+minBtn.textContent = '–';
+minBtn.style.position = 'absolute';
+minBtn.style.top = '5px';
+minBtn.style.right = '5px';
+minBtn.style.width = '22px';
+minBtn.style.height = '22px';
+minBtn.style.border = '1px solid #fff';
+minBtn.style.background = 'rgba(255,255,255,0.15)';
+minBtn.style.color = 'white';
+minBtn.style.borderRadius = '3px';
+minBtn.style.cursor = 'pointer';
 
-    // Minimize button
-    const minBtn = document.createElement('button');
-    minBtn.textContent = '–';
-    minBtn.style.position = 'absolute';
-    minBtn.style.top = '5px';
-    minBtn.style.right = '5px';
-    minBtn.style.width = '22px';
-    minBtn.style.height = '22px';
-    minBtn.style.border = '1px solid #fff';
-    minBtn.style.background = 'rgba(255,255,255,0.15)';
-    minBtn.style.color = 'white';
-    minBtn.style.borderRadius = '3px';
-    minBtn.style.cursor = 'pointer';
-
-    // Close button
-    const closeBtn = document.createElement('button');
-    closeBtn.textContent = 'X';
-    closeBtn.style.position = 'absolute';
-    closeBtn.style.top = '5px';
-    closeBtn.style.right = '35px';
-    closeBtn.style.width = '22px';
-    closeBtn.style.height = '22px';
-    closeBtn.style.border = '1px solid #fff';
-    closeBtn.style.background = 'rgba(255,255,255,0.15)';
-    closeBtn.style.color = 'white';
-    closeBtn.style.borderRadius = '3px';
-    closeBtn.style.cursor = 'pointer';
-    closeBtn.onclick = () => e.remove();
-
-    e.appendChild(minBtn);
-    e.appendChild(closeBtn);
-
-    // Text input
-    const t = document.createElement('textarea');
-    t.style.width = '100%';
-    t.style.height = '35%';
-    t.style.background = 'transparent';
-    t.style.color = 'white';
-    t.style.border = '1px solid #fff';
-    t.style.outline = 'none';
-    t.style.fontSize = '14px';
-    t.style.padding = '4px';
-    t.placeholder = 'Paste your lines here...';
-
-    // Output
-    const o = document.createElement('div');
-    o.style.width = '100%';
-    o.style.height = '40%';
-    o.style.marginTop = '10px';
-    o.style.background = 'rgba(255,255,255,0.05)';
-    o.style.padding = '5px';
-    o.style.overflowY = 'auto';
-    o.style.border = '1px solid #fff';
-    o.style.whiteSpace = 'pre-wrap';
-
-    e.appendChild(t);
-    e.appendChild(o);
-    document.body.appendChild(e);
-
-    // Drag logic
-    let dragging = false, startX = 0, startY = 0;
-    e.addEventListener('mousedown', ev => {
-        if(ev.target === t || ev.target === minBtn || ev.target === closeBtn) return;
-        dragging = true;
-        startX = ev.clientX - e.offsetLeft;
-        startY = ev.clientY - e.offsetTop;
-        ev.preventDefault();
-    });
-    document.addEventListener('mousemove', ev => {
-        if(!dragging) return;
-        e.style.left = (ev.clientX - startX) + 'px';
-        e.style.top = (ev.clientY - startY) + 'px';
-    });
-    document.addEventListener('mouseup', () => dragging = false);
-
-    document.addEventListener('keydown', a => {
-        if(a.key === 'Escape') e.remove();
-    });
-
-    // Minimize logic
-    let minimized = false;
-    minBtn.onclick = () => {
-        minimized = !minimized;
-        t.style.display = minimized ? 'none' : '';
-        o.style.display = minimized ? 'none' : '';
-
+let minimized = false;
+minBtn.onclick = () => {
+    minimized = !minimized;
+    if (minimized) {
+        t.style.display = 'none';
+        o.style.display = 'none';
         const c = document.getElementById('raButtonsContainer');
-        if(c) c.style.display = minimized ? 'none' : '';
-
-        e.style.height = minimized ? '40px' : '580px';
-        e.style.padding = minimized ? '5px' : '10px';
-        e.style.overflow = minimized ? 'hidden' : 'auto';
-        minBtn.textContent = minimized ? '+' : '–';
-    };
-
-    // RA calculation
-    let debounceTimer;
-    function r() {
-        clearTimeout(debounceTimer);
-        debounceTimer = setTimeout(() => {
-            try {
-                const a = t.value.split('\n').filter(s => !s.includes('Total de la categ')).join('\n');
-                const d = [...a.matchAll(/\[\[.*?\]\]/g)].map(s => s[0]);
-                const c = d.filter(s => s.includes('_'));
-                const p = d.filter(s => s.includes('-'));
-
-                // Build m with zero-weight filtering
-                const m = c.map(s => {
-                    const h = s.match(/\[\[(.*?)_/);
-                    if(!h) return null;
-                    const parts = h[1].split('').map(g => `${g}*(${s}-1)`);
-                    return parts.filter(v => !v.startsWith("0*")); // REMOVE 0*(...)
-                }).filter(s => s && s.length > 0);
-
-                // Build u with zero-weight filtering
-                const u = p.map(s => {
-                    const h = s.match(/\[\[(.*?)-/);
-                    if(!h) return null;
-                    const parts = h[1].split('').map(g => `${g}*(${s})`);
-                    return parts.filter(v => !v.startsWith("0*")); // REMOVE 0*(...)
-                }).filter(s => s && s.length > 0);
-
-                window.Act_Fet_NoFet = c;
-                window.Activitats_0_10 = p;
-                window.Act_Fet_NoFet_RAn = m;
-                window.Activitats_0_10_RAn = u;
-
-                const f = [];
-                if(m.length > 0){
-                    // Find maximum number of RAs across all activities
-                    const maxRAs = Math.max(...m.map(arr => arr.length));
-                    
-                    for(let g = 0; g < maxRAs; g++){
-                        const w = m.map(v => v[g]).filter(v => v);
-                        if(w.length > 0) f.push(`RA${g+1}: =average(${w.join(';')})/2*10`);
-                    }
-                }
-                window.raFormulasText = f.join('\n');
-
-                const old = document.getElementById('raButtonsContainer');
-                if(old) old.remove();
-
-                const R = document.createElement('div');
-                R.id = 'raButtonsContainer';
-                R.style.marginTop = '8px';
-                e.appendChild(R);
-
-                f.forEach(s => {
-                    const h = document.createElement('button');
-                    h.textContent = `Copy ${s.split(':')[0]}`;
-                    h.style.margin = '3px 5px 0 0';
-                    h.style.padding = '3px 8px';
-                    h.style.border = '1px solid #fff';
-                    h.style.borderRadius = '3px';
-                    h.style.background = 'rgba(255,255,255,0.1)';
-                    h.style.color = 'white';
-                    h.style.cursor = 'pointer';
-                    h.title = s;
-                    h.onclick = () => navigator.clipboard.writeText(s.split(': ')[1])
-                        .then(()=>alert(`${s.split(':')[0]} copied!`));
-                    R.appendChild(h);
-                });
-
-                o.textContent =
-                    'Act_Fet_NoFet_RAn (zero-weights removed):\n' + JSON.stringify(m, null, 2) +
-                    '\n\nActivitats_0_10_RAn (zero-weights removed):\n' + JSON.stringify(u, null, 2) +
-                    '\n\nRA Formules per column:\n' + f.join('\n');
-
-                if(f.length > 0){
-                    const lines = f.map(s => s.split(': ')[1]);
-                    const blob = new Blob([lines.join('\n')], {type:'text/plain'});
-                    const url = URL.createObjectURL(blob);
-                    const A = document.createElement('a');
-                    A.href = url;
-                    A.download = 'RA_formules.txt';
-                    document.body.appendChild(A);
-                    A.click();
-                    document.body.removeChild(A);
-                    URL.revokeObjectURL(url);
-                }
-
-            } catch(err){
-                o.textContent = 'Error: ' + err;
-            }
-        }, 500);
+        if (c) c.style.display = 'none';
+        e.style.height = '40px';
+        minBtn.textContent = '+';
+    } else {
+        t.style.display = '';
+        o.style.display = '';
+        const c = document.getElementById('raButtonsContainer');
+        if (c) c.style.display = '';
+        e.style.height = '580px';
+        minBtn.textContent = '–';
     }
+};
+e.appendChild(minBtn);
 
-    t.addEventListener('input', r);
+/* --- Input textarea --- */
+const t = document.createElement('textarea');
+t.style.width = '100%';
+t.style.height = '35%';
+t.style.background = 'transparent';
+t.style.color = 'white';
+t.style.border = '1px solid #fff';
+t.style.outline = 'none';
+t.style.fontSize = '14px';
+t.style.padding = '4px';
+t.placeholder = 'Paste your lines here...';
+
+/* --- Output box --- */
+const o = document.createElement('div');
+o.style.width = '100%';
+o.style.height = '40%';
+o.style.marginTop = '10px';
+o.style.background = 'rgba(255,255,255,0.05)';
+o.style.padding = '5px';
+o.style.overflowY = 'auto';
+o.style.border = '1px solid #fff';
+o.style.whiteSpace = 'pre-wrap';
+
+e.appendChild(t);
+e.appendChild(o);
+document.body.appendChild(e);
+
+/* --- FIXED DRAGGING (correct offset) --- */
+let dragging = false, startX = 0, startY = 0;
+
+e.addEventListener('mousedown', ev => {
+    if (ev.target === t || ev.target === minBtn) return;
+    dragging = true;
+    startX = ev.clientX - e.offsetLeft;
+    startY = ev.clientY - e.offsetTop;
+    ev.preventDefault();
+});
+
+document.addEventListener('mousemove', ev => {
+    if (!dragging) return;
+    e.style.left = (ev.clientX - startX) + 'px';
+    e.style.top = (ev.clientY - startY) + 'px';
+});
+
+document.addEventListener('mouseup', () => dragging = false);
+
+/* --- ESC closes overlay --- */
+document.addEventListener('keydown', a => {
+    if (a.key === 'Escape') e.remove();
+});
+
+/* --- RA processing with ZERO-WEIGHT FILTERING --- */
+function r(){try{
+    const a=t.value.split('\n').filter(s=>!s.includes('Total de la categ')).join('\n'),
+    d=[...a.matchAll(/\[\[.*?\]\]/g)].map(s=>s[0]),
+    c=d.filter(s=>s.includes('_')),
+    p=d.filter(s=>s.includes('-')),
+    m=c.map(s=>{const h=s.match(/\[\[(.*?)_/);if(!h)return null;const parts=h[1].split('').map(g=>`${g}*(${s}-1)`);return parts.filter(v=>!v.startsWith('0*'))}).filter(s=>s&&s.length>0),
+    u=p.map(s=>{const h=s.match(/\[\[(.*?)-/);if(!h)return null;const parts=h[1].split('').map(g=>`${g}*(${s})`);return parts.filter(v=>!v.startsWith('0*'))}).filter(s=>s&&s.length>0);
+
+    window.Act_Fet_NoFet=c;
+    window.Activitats_0_10=p;
+    window.Act_Fet_NoFet_RAn=m;
+    window.Activitats_0_10_RAn=u;
+
+    const f=[];
+    if(m.length>0){
+        const maxRAs=Math.max(...m.map(arr=>arr.length));
+        for(let g=0;g<maxRAs;g++){
+            const w=m.map(v=>v[g]).filter(v=>v);
+            if (w.length>0) f.push(`RA${g+1}: =average(${w.join(';')})/2*10`);
+        }
+    }
+    window.raFormulasText=f.join('\n');
+
+    const old = document.getElementById('raButtonsContainer');
+    if (old) old.remove();
+
+    /* --- Regenerate buttons --- */
+    const R=document.createElement('div');
+    R.id='raButtonsContainer';
+    R.style.marginTop='8px';
+    e.appendChild(R);
+
+    f.forEach(s=>{
+        const h=document.createElement('button');
+        h.textContent=`Copy ${s.split(':')[0]}`;
+        h.style.margin='3px 5px 0 0';
+        h.style.padding='3px 8px';
+        h.style.border='1px solid #fff';
+        h.style.borderRadius='3px';
+        h.style.background='rgba(255,255,255,0.1)';
+        h.style.color='white';
+        h.style.cursor='pointer';
+        h.title=s;
+        h.onclick=()=>navigator.clipboard.writeText(s.split(': ')[1])
+            .then(()=>alert(`${s.split(':')[0]} copied!`));
+        R.appendChild(h);
+    });
+
+    o.textContent='Act_Fet_NoFet_RAn (zero-weights removed):\n'+JSON.stringify(m,null,2)
+        +'\n\nActivitats_0_10_RAn (zero-weights removed):\n'+JSON.stringify(u,null,2)
+        +'\n\nRA Formulas per column:\n'+f.join('\n');
+
+    /* --- Auto-download --- */
+    if(f.length>0){
+        const lines=f.map(s=>s.split(': ')[1]);
+        const blob=new Blob([lines.join('\n')],{type:'text/plain'});
+        const url=URL.createObjectURL(blob);
+        const A=document.createElement('a');
+        A.href=url;
+        A.download='RA_formules.txt';
+        document.body.appendChild(A);
+        A.click();
+        document.body.removeChild(A);
+        URL.revokeObjectURL(url);
+    }
+}catch(err){o.textContent='Error: '+err;}
+}
+
+t.addEventListener('input', r);
 })();
