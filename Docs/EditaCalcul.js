@@ -47,11 +47,27 @@
         t.style.display = minimized ? 'none' : '';
         o.style.display = minimized ? 'none' : '';
         const c = document.getElementById('raButtonsContainer');
-        if(c) c.style.display = minimized ? 'none' : '';
+        if(c) c.style.display = minimized ? 'none' : '';f
         e.style.height = minimized ? '40px' : '580px';
         minBtn.textContent = minimized ? '+' : '–';
     };
     e.appendChild(minBtn);
+
+    // Close button
+    const closeBtn = document.createElement('button');
+    closeBtn.textContent = 'X';
+    closeBtn.style.position = 'absolute';
+    closeBtn.style.top = '5px';
+    closeBtn.style.right = '30px'; // place it left of the minimize button
+    closeBtn.style.width = '22px';
+    closeBtn.style.height = '22px';
+    closeBtn.style.border = '1px solid #fff';
+    closeBtn.style.background = 'rgba(255,255,255,0.15)';
+    closeBtn.style.color = 'white';
+    closeBtn.style.borderRadius = '3px';
+    closeBtn.style.cursor = 'pointer';
+    closeBtn.onclick = () => e.remove(); // remove the overlay
+    e.appendChild(closeBtn);
 
     // Input textarea
     const t = document.createElement('textarea');
