@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Moodle RA Overlay
 // @description  Overlay for RA formulas with automatic download
-// @version      1.0
+// @version      1.1
 // ==/UserScript==
 
 (function() {
@@ -41,24 +41,13 @@
     minBtn.style.color = 'white';
     minBtn.style.borderRadius = '3px';
     minBtn.style.cursor = 'pointer';
-    let minimized = false;
-    minBtn.onclick = () => {
-        minimized = !minimized;
-        t.style.display = minimized ? 'none' : '';
-        o.style.display = minimized ? 'none' : '';
-        const c = document.getElementById('raButtonsContainer');
-        if(c) c.style.display = minimized ? 'none' : '';
-        e.style.height = minimized ? '40px' : '580px';
-        minBtn.textContent = minimized ? '+' : '–';
-    };
-    e.appendChild(minBtn);
 
     // Close button
     const closeBtn = document.createElement('button');
     closeBtn.textContent = 'X';
     closeBtn.style.position = 'absolute';
     closeBtn.style.top = '5px';
-    closeBtn.style.right = '30px'; // place it left of the minimize button
+    closeBtn.style.right = '35px'; // left of minimize
     closeBtn.style.width = '22px';
     closeBtn.style.height = '22px';
     closeBtn.style.border = '1px solid #fff';
@@ -66,7 +55,9 @@
     closeBtn.style.color = 'white';
     closeBtn.style.borderRadius = '3px';
     closeBtn.style.cursor = 'pointer';
-    closeBtn.onclick = () => e.remove(); // remove the overlay
+    closeBtn.onclick = () => e.remove();
+
+    e.appendChild(minBtn);
     e.appendChild(closeBtn);
 
     // Input textarea
@@ -99,7 +90,7 @@
     // Dragging logic
     let dragging = false, startX = 0, startY = 0;
     e.addEventListener('mousedown', ev => {
-        if(ev.target === t || ev.target === minBtn) return;
+        if(ev.target === t || ev.target === minBtn || ev.target === closeBtn) return;
         dragging = true;
         startX = ev.clientX - e.offsetLeft;
         startY = ev.clientY - e.offsetTop;
@@ -116,6 +107,19 @@
     document.addEventListener('keydown', a => {
         if(a.key === 'Escape') e.remove();
     });
+
+    // Minimize logic (works even if no RA buttons exist)
+    let minimized = false;
+    minBtn.onclick = () => {
+        minimized = !minimized;
+        t.style.display = minimized ? 'none' : '';
+        o.style.display = minimized ? 'none' : '';
+        const c = document.getElementById('raButtonsContainer');
+        if(c) c.style.display = minimized ? 'none' : '';
+        e.style.height = minimized ? '40px' : '580px';
+        e.style.padding = minimized ? '5px' : '10px';
+        minBtn.textContent = minimized ? '+' : '–';
+    };
 
     // RA calculation and automatic download (debounced)
     let debounceTimer;
@@ -172,15 +176,18 @@
                     h.style.color = 'white';
                     h.style.cursor = 'pointer';
                     h.title = s;
-                    h.onclick = () => navigator.clipboard.writeText(s.split(': ')[1]).then(()=>alert(`${s.split(':')[0]} copied!`));
+                    h.onclick = () => navigator.clipboard.writeText(s.split(': ')[1])
+                        .then(()=>alert(`${s.split(':')[0]} copied!`));
                     R.appendChild(h);
                 });
 
-                o.textContent = 'Act_Fet_NoFet_RAn:\n'+JSON.stringify(m,null,2)+'\n\nActivitats_0_10_RAn:\n'+JSON.stringify(u,null,2)+'\n\nRA Formulas per column:\n'+f.join('\n');
+                o.textContent = 'Act_Fet_NoFet_RAn:\n'+JSON.stringify(m,null,2)+
+                                '\n\nActivitats_0_10_RAn:\n'+JSON.stringify(u,null,2)+
+                                '\n\nRA Formulas per column:\n'+f.join('\n');
 
                 // Automatic download only once per input change
                 if(f.length > 0){
-                    const lines = f.map(s => s.split(': ')[1]); // clean formulas only
+                    const lines = f.map(s => s.split(': ')[1]);
                     const blob = new Blob([lines.join('\n')], {type:'text/plain'});
                     const url = URL.createObjectURL(blob);
                     const a = document.createElement('a');
@@ -195,7 +202,7 @@
             } catch(err){
                 o.textContent = 'Error: '+err;
             }
-        }, 500); // wait 500ms after typing stops
+        }, 500);
     }
 
     t.addEventListener('input', r);
