@@ -1,4 +1,4 @@
-javascript:(function(){
+(function(){
 'use strict';
 if(document.getElementById('myOverlayTextBox'))return;
 const overlay=document.createElement('div');overlay.id='myOverlayTextBox';
