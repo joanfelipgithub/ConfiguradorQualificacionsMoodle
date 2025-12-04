@@ -157,7 +157,10 @@
 
                 const f = [];
                 if(m.length > 0){
-                    for(let g = 0; g < m[0].length; g++){
+                    // Find maximum number of RAs across all activities
+                    const maxRAs = Math.max(...m.map(arr => arr.length));
+                    
+                    for(let g = 0; g < maxRAs; g++){
                         const w = m.map(v => v[g]).filter(v => v);
                         if(w.length > 0) f.push(`RA${g+1}: =average(${w.join(';')})/2*10`);
                     }
