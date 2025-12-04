@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Moodle RA Overlay
 // @description  Overlay for RA formulas with automatic download
-// @version      1.1
+// @version      1.2
 // ==/UserScript==
 
 (function() {
@@ -108,16 +108,23 @@
         if(a.key === 'Escape') e.remove();
     });
 
-    // Minimize logic (works even if no RA buttons exist)
+    // Minimize logic
     let minimized = false;
     minBtn.onclick = () => {
         minimized = !minimized;
+
+        // Hide content
         t.style.display = minimized ? 'none' : '';
         o.style.display = minimized ? 'none' : '';
         const c = document.getElementById('raButtonsContainer');
         if(c) c.style.display = minimized ? 'none' : '';
+
+        // Shrink overlay itself
         e.style.height = minimized ? '40px' : '580px';
         e.style.padding = minimized ? '5px' : '10px';
+        e.style.overflow = minimized ? 'hidden' : 'auto';
+
+        // Update minimize button icon
         minBtn.textContent = minimized ? '+' : '–';
     };
 
