@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Moodle RA Overlay
 // @description  Overlay for RA formulas with automatic download
-// @version      1.2
+// @version      1.3
 // ==/UserScript==
 
 (function() {
@@ -28,7 +28,7 @@
     e.style.fontFamily = 'monospace';
     e.style.boxSizing = 'border-box';
 
-    // Minimize / restore button
+    // Minimize button
     const minBtn = document.createElement('button');
     minBtn.textContent = '–';
     minBtn.style.position = 'absolute';
@@ -47,7 +47,7 @@
     closeBtn.textContent = 'X';
     closeBtn.style.position = 'absolute';
     closeBtn.style.top = '5px';
-    closeBtn.style.right = '35px'; // left of minimize
+    closeBtn.style.right = '35px';
     closeBtn.style.width = '22px';
     closeBtn.style.height = '22px';
     closeBtn.style.border = '1px solid #fff';
@@ -60,7 +60,7 @@
     e.appendChild(minBtn);
     e.appendChild(closeBtn);
 
-    // Input textarea
+    // Text input
     const t = document.createElement('textarea');
     t.style.width = '100%';
     t.style.height = '35%';
@@ -72,7 +72,7 @@
     t.style.padding = '4px';
     t.placeholder = 'Paste your lines here...';
 
-    // Output box
+    // Output
     const o = document.createElement('div');
     o.style.width = '100%';
     o.style.height = '40%';
@@ -87,7 +87,7 @@
     e.appendChild(o);
     document.body.appendChild(e);
 
-    // Dragging logic
+    // Drag logic
     let dragging = false, startX = 0, startY = 0;
     e.addEventListener('mousedown', ev => {
         if(ev.target === t || ev.target === minBtn || ev.target === closeBtn) return;
@@ -103,7 +103,6 @@
     });
     document.addEventListener('mouseup', () => dragging = false);
 
-    // ESC closes overlay
     document.addEventListener('keydown', a => {
         if(a.key === 'Escape') e.remove();
     });
@@ -112,42 +111,44 @@
     let minimized = false;
     minBtn.onclick = () => {
         minimized = !minimized;
-
-        // Hide content
         t.style.display = minimized ? 'none' : '';
         o.style.display = minimized ? 'none' : '';
+
         const c = document.getElementById('raButtonsContainer');
         if(c) c.style.display = minimized ? 'none' : '';
 
-        // Shrink overlay itself
         e.style.height = minimized ? '40px' : '580px';
         e.style.padding = minimized ? '5px' : '10px';
         e.style.overflow = minimized ? 'hidden' : 'auto';
-
-        // Update minimize button icon
         minBtn.textContent = minimized ? '+' : '–';
     };
 
-    // RA calculation and automatic download (debounced)
+    // RA calculation
     let debounceTimer;
-    function r(){
+    function r() {
         clearTimeout(debounceTimer);
         debounceTimer = setTimeout(() => {
-            try{
+            try {
                 const a = t.value.split('\n').filter(s => !s.includes('Total de la categ')).join('\n');
                 const d = [...a.matchAll(/\[\[.*?\]\]/g)].map(s => s[0]);
                 const c = d.filter(s => s.includes('_'));
                 const p = d.filter(s => s.includes('-'));
+
                 const m = c.map(s => {
                     const h = s.match(/\[\[(.*?)_/);
                     if(!h) return null;
                     return h[1].split('').map(g => `${g}*(${s}-1)`);
                 }).filter(s => s);
+
+                // *** ONLY CHANGE REQUESTED ***
+                // Build u AND remove zero-weight items
                 const u = p.map(s => {
                     const h = s.match(/\[\[(.*?)-/);
                     if(!h) return null;
-                    return h[1].split('').map(g => `${g}*(${s})`);
-                }).filter(s => s);
+
+                    const parts = h[1].split('').map(g => `${g}*(${s})`);
+                    return parts.filter(v => !v.startsWith("0*")); // REMOVE 0*(...)
+                }).filter(s => s && s.length > 0);
 
                 window.Act_Fet_NoFet = c;
                 window.Activitats_0_10 = p;
@@ -171,7 +172,6 @@
                 R.style.marginTop = '8px';
                 e.appendChild(R);
 
-                // Copy buttons
                 f.forEach(s => {
                     const h = document.createElement('button');
                     h.textContent = `Copy ${s.split(':')[0]}`;
@@ -188,26 +188,26 @@
                     R.appendChild(h);
                 });
 
-                o.textContent = 'Act_Fet_NoFet_RAn:\n'+JSON.stringify(m,null,2)+
-                                '\n\nActivitats_0_10_RAn:\n'+JSON.stringify(u,null,2)+
-                                '\n\nRA Formulas per column:\n'+f.join('\n');
+                o.textContent =
+                    'Act_Fet_NoFet_RAn:\n' + JSON.stringify(m, null, 2) +
+                    '\n\nActivitats_0_10_RAn (zero-weights removed):\n' + JSON.stringify(u, null, 2) +
+                    '\n\nRA Formules per column:\n' + f.join('\n');
 
-                // Automatic download only once per input change
                 if(f.length > 0){
                     const lines = f.map(s => s.split(': ')[1]);
                     const blob = new Blob([lines.join('\n')], {type:'text/plain'});
                     const url = URL.createObjectURL(blob);
-                    const a = document.createElement('a');
-                    a.href = url;
-                    a.download = 'RA_formules.txt';
-                    document.body.appendChild(a);
-                    a.click();
-                    document.body.removeChild(a);
+                    const A = document.createElement('a');
+                    A.href = url;
+                    A.download = 'RA_formules.txt';
+                    document.body.appendChild(A);
+                    A.click();
+                    document.body.removeChild(A);
                     URL.revokeObjectURL(url);
                 }
 
             } catch(err){
-                o.textContent = 'Error: '+err;
+                o.textContent = 'Error: ' + err;
             }
         }, 500);
     }
