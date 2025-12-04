@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Moodle RA Overlay
 // @description  Overlay for RA formulas with automatic download
-// @version      1.3
+// @version      1.4
 // ==/UserScript==
 
 (function() {
@@ -134,20 +134,20 @@
                 const c = d.filter(s => s.includes('_'));
                 const p = d.filter(s => s.includes('-'));
 
+                // FET/NO FET (unchanged)
                 const m = c.map(s => {
                     const h = s.match(/\[\[(.*?)_/);
                     if(!h) return null;
                     return h[1].split('').map(g => `${g}*(${s}-1)`);
                 }).filter(s => s);
 
-                // *** ONLY CHANGE REQUESTED ***
-                // Build u AND remove zero-weight items
+                // 0–10 CLEANED
                 const u = p.map(s => {
                     const h = s.match(/\[\[(.*?)-/);
                     if(!h) return null;
 
                     const parts = h[1].split('').map(g => `${g}*(${s})`);
-                    return parts.filter(v => !v.startsWith("0*")); // REMOVE 0*(...)
+                    return parts.filter(v => !v.startsWith("0*"));
                 }).filter(s => s && s.length > 0);
 
                 window.Act_Fet_NoFet = c;
@@ -155,6 +155,7 @@
                 window.Act_Fet_NoFet_RAn = m;
                 window.Activitats_0_10_RAn = u;
 
+                // RA formulas (overlay only)
                 const f = [];
                 if(m.length > 0){
                     for(let g = 0; g < m[0].length; g++){
@@ -172,7 +173,8 @@
                 R.style.marginTop = '8px';
                 e.appendChild(R);
 
-                f.forEach(s => {
+                // COPY BUTTONS → use CLEANED u[]
+                f.forEach((s, idx) => {
                     const h = document.createElement('button');
                     h.textContent = `Copy ${s.split(':')[0]}`;
                     h.style.margin = '3px 5px 0 0';
@@ -182,20 +184,29 @@
                     h.style.background = 'rgba(255,255,255,0.1)';
                     h.style.color = 'white';
                     h.style.cursor = 'pointer';
-                    h.title = s;
-                    h.onclick = () => navigator.clipboard.writeText(s.split(': ')[1])
-                        .then(()=>alert(`${s.split(':')[0]} copied!`));
+
+                    const formula = `=average(${u[idx].join(';')})/2*10`;
+
+                    h.onclick = () =>
+                        navigator.clipboard.writeText(formula)
+                            .then(()=>alert(`${s.split(':')[0]} copied!`));
+
                     R.appendChild(h);
                 });
 
+                // Overlay output
                 o.textContent =
                     'Act_Fet_NoFet_RAn:\n' + JSON.stringify(m, null, 2) +
                     '\n\nActivitats_0_10_RAn (zero-weights removed):\n' + JSON.stringify(u, null, 2) +
                     '\n\nRA Formules per column:\n' + f.join('\n');
 
-                if(f.length > 0){
-                    const lines = f.map(s => s.split(': ')[1]);
-                    const blob = new Blob([lines.join('\n')], {type:'text/plain'});
+                // DOWNLOAD → use CLEANED u[]
+                if (u.length > 0) {
+                    const cleanedFormulas = u.map(parts =>
+                        `=average(${parts.join(';')})/2*10`
+                    );
+
+                    const blob = new Blob([cleanedFormulas.join('\n')], {type:'text/plain'});
                     const url = URL.createObjectURL(blob);
                     const A = document.createElement('a');
                     A.href = url;
